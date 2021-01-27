@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Rye&family=Ubuntu:wght@300;400;500;700&display=swap');
+
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+
+.image-cover {
+   @apply w-full h-full object-cover
+}
+
+html {
+   body {
+      font-family: 'Ubuntu', sans-serif;
+      position: relative;
+      background: white;
+      a:focus {
+         outline: none;
+      }
+
+      .tippy-tooltip.dark-theme {
+         border-radius: 4px;
+         padding: 4px 8px;
+         .tippy-backdrop {
+            background-color: #4B5563 !important;
+         }
+         .tippy-content {
+            font-size: 12px;
+         }
+      }
+
+      // override default autocomplete form input styles [in webkit browsers]
+      // input:-webkit-autofill {
+      //    box-shadow: 0 0 0 30px #292E39 inset !important;
+      //    -webkit-box-shadow: 0 0 0 30px #292E39 inset !important;
+      // }
+   }
+}
