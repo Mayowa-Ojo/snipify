@@ -1,0 +1,64 @@
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss7-compat": "^2.0.2",
+    "@yzfe/svgicon": "^1.0.1",
+    "@yzfe/vue-svgicon": "^4.0.2",
+    "autoprefixer": "^9.8.6",
+    "axios": "^0.21.0",
+    "core-js": "^3.6.5",
+    "date-fns": "^2.16.1",
+    "mobile-device-detect": "^0.4.3",
+    "nanoid": "^3.1.20",
+    "postcss": "^7.0.35",
+    "prismjs": "^1.23.0",
+    "sass": "^1.26.10",
+    "sass-loader": "^10.0.2",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.2",
+    "vee-validate": "^3.4.3",
+    "vue": "^2.6.11",
+    "vue-clickaway": "^2.2.2",
+    "vue-prism-editor": "^1.2.2",
+    "vue-router": "^3.2.0",
+    "vue-tippy": "^4.7.2",
+    "vuex": "^3.4.0"
+  },
+  "devDependencies": {
+    "@linusborg/vue-simple-portal": "^0.1.5",
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@yzfe/svgicon-loader": "^1.0.3",
+    "@yzfe/vue-cli-plugin-svgicon": "~1.0.2",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-vue": "^6.2.2",
+    "vue-template-compiler": "^2.6.11"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
