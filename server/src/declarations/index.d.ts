@@ -4,6 +4,7 @@ import File from "~entity/file.entity";
 import Snip from "~entity/snip.entity";
 import Collection from "~entity/collection.entity";
 import User from "~entity/user.entity";
+import Comment from "~entity/comment.entity";
 
 declare interface IEnvConfig {
    PORT: string | number
@@ -25,13 +26,12 @@ declare interface IEnvConfig {
    GITHUB_USER_URL: string
 }
 
-declare type IBaseEntity = User | Collection | Snip | File
+declare type IBaseEntity = User | Collection | Snip | File | Comment
 
 declare interface IRepositoryPayload {
    data?: any
    query?: any
    update?: any
-   relations?: string | string[]
 }
 
 declare type AsyncHandler = (req: Request, res: Response, next?: NextFunction) => Promise<void>
