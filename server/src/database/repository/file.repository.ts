@@ -1,4 +1,4 @@
-import { getRepository, Repository, InsertResult } from "typeorm";
+import { getRepository, Repository, InsertResult, FindOneOptions } from "typeorm";
 
 import File from "~entity/file.entity";
 import { populateEntityFields } from "~utils/index";
@@ -38,11 +38,11 @@ export const insertMany = async ({ data }: IRepositoryPayload): Promise<InsertRe
    }
 }
 
-export const findOne = async ({ query }: IRepositoryPayload): Promise<File> => {
+export const findOne = async ({ query }: IRepositoryPayload, opts?: FindOneOptions<File>): Promise<File> => {
    try {
       repository = getRepository(File);
 
-      const file = await repository.findOne({ where: query });
+      const file = await repository.findOne({ where: query, ...opts });
 
       return file;
    } catch (err) {
@@ -50,11 +50,11 @@ export const findOne = async ({ query }: IRepositoryPayload): Promise<File> => {
    }
 }
 
-export const findById = async ({ query }: IRepositoryPayload): Promise<File> => {
+export const findById = async ({ query }: IRepositoryPayload, opts?: FindOneOptions<File>): Promise<File> => {
    try {
       repository = getRepository(File);
 
-      const file = await repository.findOne(query.id);
+      const file = await repository.findOne(query.id, { ...opts });
 
       return file as File;
    } catch (err) {
@@ -62,17 +62,17 @@ export const findById = async ({ query }: IRepositoryPayload): Promise<File> => 
    }
 }
 
-export const find = async ({ query }: IRepositoryPayload): Promise<File[]> => {
+export const find = async ({ query }: IRepositoryPayload, opts?: FindOneOptions<File>): Promise<File[]> => {
    try {
       repository = getRepository(File);
       let files: File[];
 
       if(Array.isArray(query.ids)) {
-         files = await repository.findByIds(query.ids);
+         files = await repository.findByIds(query.ids, { ...opts });
          return files;
       }
 
-      files = await repository.find({ where: query });
+      files = await repository.find({ where: query, ...opts });
       return files;
    } catch (err) {
       throw new Error(err.message)

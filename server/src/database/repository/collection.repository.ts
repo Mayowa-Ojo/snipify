@@ -1,11 +1,11 @@
-import { getRepository, Repository } from "typeorm";
+import { FindOneOptions, getRepository, Repository } from "typeorm";
 
 import Collection from "~entity/collection.entity";
 import { IRepositoryPayload } from "~declarations/index";
 import { populateEntityFields } from "~utils/index";
 
 let repository: Repository<Collection>
-const validRelations = ["snips", "owner"];
+const validRelations = ["snips", "owner", "snips.files"];
 
 export const create = async ({ data }: IRepositoryPayload): Promise<Collection> => {
    try {
@@ -23,22 +23,11 @@ export const create = async ({ data }: IRepositoryPayload): Promise<Collection> 
    }
 }
 
-export const findOne = async ({ query, relations }: any): Promise<Collection> => {
+export const findOne = async ({ query }: IRepositoryPayload, opts?: FindOneOptions<Collection>): Promise<Collection> => {
    try {
       repository = getRepository(Collection);
 
-      if(relations && relations.length >= 1) {
-         if(!Array.isArray(relations)) relations = [relations];
-         const isValid = relations.every((relation: string) => validRelations.includes(relation));
-
-         if(!isValid) throw new Error("One or more relations does not exist on queried entity");
-
-         const collection = await repository.findOne({ where: query, relations });
-
-         return collection as Collection;
-      }
-
-      const collection = await repository.findOne({ where: query });
+      const collection = await repository.findOne({ where: query, ...opts });
 
       return collection;
    } catch (err) {
@@ -46,22 +35,11 @@ export const findOne = async ({ query, relations }: any): Promise<Collection> =>
    }
 }
 
-export const findById = async ({ query, relations }: IRepositoryPayload): Promise<Collection> => {
+export const findById = async ({ query }: IRepositoryPayload, opts?: FindOneOptions<Collection>): Promise<Collection> => {
    try {
       repository = getRepository(Collection);
 
-      if(relations && relations.length >= 1) {
-         if(!Array.isArray(relations)) relations = [relations];
-         const isValid = relations.every(relation => validRelations.includes(relation));
-
-         if(!isValid) throw new Error("One or more relations does not exist on queried entity");
-
-         const collection = await repository.findOne(query.id, { relations });
-
-         return collection as Collection;
-      }
-
-      const collection = await repository.findOne(query.id);
+      const collection = await repository.findOne(query.id, { ...opts });
 
       return collection as Collection;
    } catch (err) {
@@ -69,28 +47,14 @@ export const findById = async ({ query, relations }: IRepositoryPayload): Promis
    }
 }
 
-export const find = async ({ query, relations }: IRepositoryPayload): Promise<Collection[]> => {
+export const find = async ({ query }: IRepositoryPayload, opts?: FindOneOptions<Collection>): Promise<Collection[]> => {
    try {
       repository = getRepository(Collection);
 
-      if(relations && relations.length >= 1) {
-         if(!Array.isArray(relations)) relations = [relations];
-         const isValid = relations.every(relation => validRelations.includes(relation));
-
-         if(!isValid) throw new Error("One or more relations does not exist on queried entity");
-
-         const collections = Array.isArray(query.ids) ?
-            await repository.findByIds(query.ids, { relations })
-         :
-            await repository.find({ where: query, relations });
-
-         return collections;
-      }
-
       const collections = Array.isArray(query.ids) ?
-         await repository.findByIds(query.ids)
+         await repository.findByIds(query.ids, { ...opts })
       :
-         await repository.find({ where: query });
+         await repository.find({ where: query, ...opts });
 
       return collections;
    } catch (err) {

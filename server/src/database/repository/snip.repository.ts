@@ -1,11 +1,10 @@
-import { getRepository, Repository, FindManyOptions } from "typeorm";
+import { getRepository, Repository, UpdateResult, DeleteResult, FindManyOptions, FindOneOptions } from "typeorm";
 
 import Snip from "~entity/snip.entity";
 import { IRepositoryPayload } from "~declarations/index";
 import { populateEntityFields } from "~utils/index";
 
 let repository: Repository<Snip>
-const validRelations = ["files"];
 
 export const create = async ({ data }: IRepositoryPayload): Promise<Snip> => {
    try {
@@ -23,22 +22,11 @@ export const create = async ({ data }: IRepositoryPayload): Promise<Snip> => {
    }
 }
 
-export const findOne = async ({ query, relations }: IRepositoryPayload): Promise<Snip> => {
+export const findOne = async ({ query }: IRepositoryPayload, opts?: FindOneOptions<Snip>): Promise<Snip> => {
    try {
       repository = getRepository(Snip);
 
-      if(relations && relations.length >= 1) {
-         if(!Array.isArray(relations)) relations = [relations];
-         const isValid = relations.every((relation: string) => validRelations.includes(relation));
-
-         if(!isValid) throw new Error("One or more relations does not exist on queried entity");
-
-         const snip = await repository.findOne({ where: query, relations });
-
-         return snip as Snip;
-      }
-
-      const snip = await repository.findOne({ where: query });
+      const snip = await repository.findOne({ where: query, ...opts });
 
       return snip;
    } catch (err) {
@@ -46,22 +34,11 @@ export const findOne = async ({ query, relations }: IRepositoryPayload): Promise
    }
 }
 
-export const findById = async ({ query, relations }: IRepositoryPayload): Promise<Snip> => {
+export const findById = async ({ query }: IRepositoryPayload, opts?: FindOneOptions<Snip>): Promise<Snip> => {
    try {
       repository = getRepository(Snip);
 
-      if(relations && relations.length >= 1) {
-         if(!Array.isArray(relations)) relations = [relations];
-         const isValid = relations.every(relation => validRelations.includes(relation));
-
-         if(!isValid) throw new Error("One or more relations does not exist on queried entity");
-
-         const snip = await repository.findOne(query.id, { relations });
-
-         return snip as Snip;
-      }
-
-      const snip = await repository.findOne(query.id);
+      const snip = await repository.findOne(query.id, { ...opts });
 
       return snip as Snip;
    } catch (err) {
@@ -69,28 +46,14 @@ export const findById = async ({ query, relations }: IRepositoryPayload): Promis
    }
 }
 
-export const find = async ({ query, relations }: IRepositoryPayload): Promise<Snip[]> => {
+export const find = async ({ query }: IRepositoryPayload, opts?: FindManyOptions<Snip>): Promise<Snip[]> => {
    try {
       repository = getRepository(Snip);
 
-      if(relations && relations.length >= 1) {
-         if(!Array.isArray(relations)) relations = [relations];
-         const isValid = relations.every(relation => validRelations.includes(relation));
-
-         if(!isValid) throw new Error("One or more relations does not exist on queried entity");
-
-         const snips = Array.isArray(query.ids) ?
-            await repository.findByIds(query.ids, { relations })
-         :
-            await repository.find({ where: query, relations });
-
-         return snips;
-      }
-
       const snips = Array.isArray(query.ids) ?
-         await repository.findByIds(query.ids)
+         await repository.findByIds(query.ids, { ...opts })
       :
-         await repository.find({ where: query });
+         await repository.find({ where: query, ...opts });
 
       return snips;
    } catch (err) {
@@ -98,23 +61,23 @@ export const find = async ({ query, relations }: IRepositoryPayload): Promise<Sn
    }
 }
 
-export const updateOne = async ({ query, update }: IRepositoryPayload): Promise<Snip> => {
+export const updateOne = async ({ query, update }: IRepositoryPayload): Promise<UpdateResult> => {
    try {
       repository = getRepository(Snip);
-      const updateResult = await repository.update(query, update);
+      const result = await repository.update(query, update);
 
-      return updateResult as unknown as Snip;
+      return result;
    } catch (err) {
       throw new Error(err.message);
    }
 }
 
-export const deleteOne = async ({ query }: IRepositoryPayload): Promise<Snip> => {
+export const deleteOne = async ({ query }: IRepositoryPayload): Promise<DeleteResult> => {
    try {
       repository = getRepository(Snip);
       const result = await repository.delete(query);
 
-      return result as unknown as Snip;
+      return result;
    } catch (err) {
       throw new Error(err.message);
    }
