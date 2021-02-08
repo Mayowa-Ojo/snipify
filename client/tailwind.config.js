@@ -21,5 +21,7 @@ module.exports = {
       textColor: ["responsive", "hover", "focus", "group-hover", "group-focus"],
       visibility: ["responsive", "hover", "focus", "group-hover", "group-focus"]
    },
-   plugins: [],
+   plugins: [
+      require("@tailwindcss/line-clamp")
+   ],
 }
