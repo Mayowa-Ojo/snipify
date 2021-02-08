@@ -30,6 +30,13 @@ export default {
             return
          }
 
+         if(newVal === "forking") {
+            this.$store.dispatch(ACTIONS.TOGGLE_MODAL, {
+               component: "Forking"
+            })
+            return
+         }
+
          this.$store.dispatch(ACTIONS.TOGGLE_MODAL, {})
       }
    }
