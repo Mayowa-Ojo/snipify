@@ -1,8 +1,8 @@
 import axios from "axios"
 
 import router from "../router"
-// import store from "../store"
-// import { MUTATIONS } from "../constants/store"
+import store from "../store"
+import { MUTATIONS } from "../store/types"
 import LocalStorage from '../services/localstorage'
 
 const ls = new LocalStorage()
@@ -10,8 +10,17 @@ const ls = new LocalStorage()
 const interceptExpiredTokenError = async (err) => {
    if(err.response.status === 401) {
       ls.delete("user")
+      store.commit(MUTATIONS.SET_STATUS, "error")
 
-      router.push("/")
+      if(router.currentRoute.path.includes("/snip")) {
+         router.push("/")
+      }
+
+      store.commit(MUTATIONS.TOGGLE_TOAST, {
+         type: "error",
+         content: "Please sign in with your github account."
+      })
+
    }
 }
 
@@ -27,7 +36,7 @@ export const injectAuthHeader = (headers) => {
       return
    }
 
-   headers["Authorization"] = `Bearer ${token}`
+   headers["Authorization"] = `token ${token}`
 }
 
 // Request interceptor - add authorization header to every request
@@ -66,12 +75,17 @@ export default async function httpRequest(endpoint, { method, ...options }) {
          ...options
       })
 
-      return response.data
+      return response?.data
    } catch(err) {
-      // show toast component
+      store.commit(MUTATIONS.SET_STATUS, "error")
+
+      store.commit(MUTATIONS.TOGGLE_TOAST, {
+         type: "error",
+         content: "Oops! something went wrong, please try again."
+      })
 
       if(err.response) {
-         console.error(`Error: --http: ${JSON.stringify(err.response.data)}`)
+         console.error(`Error: --http: ${JSON.stringify(err.response?.data)}`)
          return
       }
       console.error(`Error --http: \n ${err}`)
