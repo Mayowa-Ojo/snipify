@@ -1,0 +1,53 @@
+
+export const fileIconMixin = {
+   computed: {
+      fileIcon: function() {
+         return {
+            typescript: "typescript-plain",
+            javascript: "javascript-plain",
+            react: "react-original",
+            java: "java-plain",
+            scala: "scala-plain",
+            golang: "go-plain",
+            ruby: "ruby-plain",
+            php: "php-plain",
+            css: "css3-plain",
+            sass: "sass-original",
+            scss: "sass-original",
+            "c#": "csharp-plain",
+            c: "c-plain",
+            "c++": "cplusplus-plain",
+            shell: "bash-plain",
+            json: "slack-plain",
+            yaml: "slack-plain",
+            xml: "slack-plain",
+            clojure: "clojure-line",
+            dart: "flutter-plain",
+            python: "python-plain",
+            elixir: "slack-plain",
+            haskell: "haskell-plain",
+            rust: "rust-plain",
+            julia: "slack-plain",
+            crystal: "slack-plain",
+            kotlin: "kotlin-plain",
+            lua: "slack-plain",
+            markdown: "slack-plain",
+            html: "html5-plain",
+            swift: "swift-plain",
+            cython: "python-plain",
+            dockerfile: "docker-plain",
+            gdscript: "slack-plain",
+            gradle: "gradle-plain",
+            sql: "slack-plain",
+            graphql: "slack-plain",
+            jupyter_notebook: "slack-plain",
+            text: "slack-plain",
+            vue: "vuejs-plain",
+            protobuf: "slack-plain",
+            solidity: "slack-plain",
+            v: "slack-plain",
+            zig: "slack-plain",
+         }
+      }
+   }
+}
