@@ -28,6 +28,14 @@ class Comment {
    })
    likes: number;
 
+   @Column({
+      type: "uuid",
+      name: "liked_by",
+      array: true,
+      default: "{}"
+   })
+   likedBy: string[];
+
    @CreateDateColumn({
       name: "created_at",
       type: "timestamp"

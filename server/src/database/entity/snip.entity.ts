@@ -6,7 +6,8 @@ import {
    UpdateDateColumn,
    OneToMany,
    ManyToOne,
-   JoinColumn
+   JoinColumn,
+   OneToOne
 } from "typeorm";
 
 import User from "./user.entity";
@@ -22,6 +23,7 @@ class Snip {
 
    @Column({
       type: "varchar",
+      length: 765
    })
    title: string;
 
@@ -29,6 +31,12 @@ class Snip {
       type: "text",
    })
    description: string;
+
+   @Column({
+      type: "varchar",
+      length: 765
+   })
+   slug: string;
 
    @Column({
       type: "int",
@@ -49,6 +57,13 @@ class Snip {
       default: Permissions.PUBLIC
    })
    permission: Permissions;
+
+   @Column({
+      name: "comments_count",
+      type: "int",
+      default: 0
+   })
+   commentsCount: number;
 
    @CreateDateColumn({
       name: "created_at",
@@ -81,6 +96,10 @@ class Snip {
       cascade: ["insert", "update"]
    })
    comments: Comment[];
+
+   @OneToOne(() => Snip)
+   @JoinColumn({ name: "source_id" })
+   source: Snip;
 }
 
 export default Snip;

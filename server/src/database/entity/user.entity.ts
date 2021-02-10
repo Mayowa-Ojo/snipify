@@ -27,6 +27,13 @@ class User {
    @Column({
       type: "varchar",
       length: 255,
+      unique: true
+   })
+   username: string;
+
+   @Column({
+      type: "varchar",
+      length: 255,
       name: "github_id"
    })
    githubId: string;
@@ -43,6 +50,21 @@ class User {
       default: "{}"
    })
    starred: string[];
+
+   @Column({
+      type: "uuid",
+      array: true,
+      default: "{}"
+   })
+   forked: string[];
+
+   @Column({
+      type: "varchar",
+      name: "revoked_tokens",
+      array: true,
+      default: "{}"
+   })
+   revokedTokens: string[];
 
    @CreateDateColumn({
       name: "created_at",
