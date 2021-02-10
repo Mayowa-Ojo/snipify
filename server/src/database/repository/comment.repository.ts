@@ -101,3 +101,13 @@ export const deleteOne = async ({ query }: IRepositoryPayload): Promise<DeleteRe
       throw new Error(err.message);
    }
 }
+
+export const buildQuery = async (cb: (repo: Repository<Comment>) => Promise<Comment[]>) => {
+   try {
+      repository = getRepository(Comment);
+
+      return await cb(repository)
+   } catch (err) {
+      throw new Error(err.message)
+   }
+}
