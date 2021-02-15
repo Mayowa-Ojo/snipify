@@ -37,6 +37,8 @@ export default {
             return
          }
 
+         if(newVal === "comment-loading" || newVal === "comment-done") return
+
          this.$store.dispatch(ACTIONS.TOGGLE_MODAL, {})
       }
    }
