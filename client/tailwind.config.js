@@ -19,7 +19,8 @@ module.exports = {
    },
    variants: {
       textColor: ["responsive", "hover", "focus", "group-hover", "group-focus"],
-      visibility: ["responsive", "hover", "focus", "group-hover", "group-focus"]
+      visibility: ["responsive", "hover", "focus", "group-hover", "group-focus"],
+      display: ["responsive", "hover", "focus", "group-hover", "group-focus"],
    },
    plugins: [
       require("@tailwindcss/line-clamp")
