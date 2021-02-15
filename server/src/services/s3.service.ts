@@ -14,6 +14,7 @@ const s3 = new Aws.S3({
 interface IUploadObject {
    content: unknown
    filename: string
+   objectKey?: string
 }
 
 export const getOne = async (key: string): Promise<Aws.S3.GetObjectOutput> => {
@@ -65,6 +66,23 @@ export const uploadMany = async (objects: IUploadObject[]): Promise<Aws.S3.Manag
          Bucket: config.AWS_S3_BUCKET,
          Body: obj.content,
          Key: `${nanoid(8)}~${obj.filename}`,
+         ContentType: "text/plain"
+      }).promise());
+
+      const result = await Promise.all(promises);
+
+      return result;
+   } catch (err) {
+      throw new Error(err);
+   }
+}
+
+export const updateMany = async (objects: IUploadObject[]): Promise<Aws.S3.PutObjectOutput[]> => {
+   try {
+      const promises = objects.map(obj => s3.putObject({
+         Bucket: config.AWS_S3_BUCKET,
+         Body: obj.content,
+         Key: obj.objectKey,
          ContentType: "text/plain"
       }).promise());
 
