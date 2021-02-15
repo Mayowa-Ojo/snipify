@@ -6,9 +6,10 @@ import * as snipRespository from "~repository/snip.repository";
 import * as userRespository from "~repository/user.repository";
 import * as commentRespository from "~repository/comment.repository";
 import * as s3 from "~services/s3.service";
+import * as es from "~services/es.service";
 import { mapExtensionToLanguage, ResponseError, slugify } from "~utils/index";
 import { Permissions } from "~declarations/enums";
-import type { AsyncHandler } from "~declarations/index";
+import type { AsyncHandler, ISnipIndex } from "~declarations/index";
 import User from "~entity/user.entity";
 
 export const create: AsyncHandler = async (req, res, next) => {
@@ -58,6 +59,12 @@ export const create: AsyncHandler = async (req, res, next) => {
       }, {
          relations: ["files", "author", "source", "source.author"]
       });
+
+      await es.addDocumentToIndex(<ISnipIndex>{
+         snipId: "",
+         title: snip.title,
+         description: snip.description
+      }, "snips");
 
       res.status(201).json({
          ok: true,
@@ -402,6 +409,106 @@ export const generateZipFile: AsyncHandler = async (req, res, next) => {
          "Content-disposition": `attachment; filename=${snip.title}.zip`
       });
       res.end(buffer);
+   } catch (err) {
+      error.message = err.message;
+      next(error);
+   }
+}
+
+export const updateOne: AsyncHandler = async (req, res, next) => {
+   const error = new ResponseError;
+   const { id } = req.params;
+   const { title, description, files, permission } = req.body;
+   const user = <User>res.locals.user;
+
+   if(!id) {
+      error.message = "missing/malformed field in request params";
+      error.statusCode = codes.BAD_REQUEST;
+
+      next(error);
+      return;
+   }
+
+   if(![title, description, files].every(Boolean)) {
+      error.message = "missing/malformed field in request body";
+      error.statusCode = codes.BAD_REQUEST;
+
+      next(error);
+      return;
+   }
+
+   if(!Array.isArray(files) || !files.every((file) => !!file.filename && !!file.content)) {
+      error.message = "missing/malformed field in request body";
+      error.statusCode = codes.BAD_REQUEST;
+
+      next(error);
+      return;
+   }
+
+   try {
+      let snip = await snipRespository.findOne({
+         query: { id }
+      }, {
+         relations: ["files", "author"]
+      });
+
+      if(snip.author.id !== user.id) {
+         error.message = "not authorized";
+         error.statusCode = codes.FORBIDDEN;
+
+         next(error);
+         return;
+      }
+
+      await snipRespository.updateOne({
+         query: { id: snip.id },
+         update: {
+            title,
+            description,
+            permission,
+            slug: slugify(title)
+         }
+      });
+
+      const fileObjects = files.filter(file => !file.id.includes("snip")).map(file => ({
+         filename: file.filename,
+         content: file.content,
+         objectKey: snip.files.find(el => el.id === file.id).objectKey
+      }));
+
+      await s3.updateMany(fileObjects);
+
+      // check for new files
+      const newFiles = files.filter(file => file.id.includes("snip"));
+
+      if(newFiles.length > 0) {
+         // create new files
+         const uploadResult = await s3.uploadMany(newFiles);
+
+         const insertFilesPayload = uploadResult.map(obj => ({
+            filename: obj.Key.split("~").pop(),
+            language: mapExtensionToLanguage(obj.Key.split(".").pop()),
+            objectKey: obj.Key,
+            objectLocation: obj.Location,
+            snip: snip.id
+         }));
+
+         await fileRepository.insertMany({ data: insertFilesPayload });
+      }
+
+      snip = await snipRespository.findOne({
+         query: { id: snip.id }
+      }, {
+         relations: ["files", "author", "source", "source.author"]
+      });
+
+      res.status(codes.OK).json({
+         ok: true,
+         message: "resource updated",
+         data: {
+            snip
+         }
+      });
    } catch (err) {
       error.message = err.message;
       next(error);

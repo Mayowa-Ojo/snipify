@@ -2,9 +2,10 @@ import codes from "http-status-codes";
 
 import * as collectionRepository from "~repository/collection.repository";
 import * as snipRepository from "~repository/snip.repository";
-import { ResponseError } from "~utils/index";
-import type { AsyncHandler } from "~declarations/index";
+import * as es from "~services/es.service";
 import User from "~entity/user.entity";
+import { ResponseError } from "~utils/index";
+import type { AsyncHandler, ICollectionIndex } from "~declarations/index";
 
 export const create: AsyncHandler = async (req, res, next) => {
    const error = new ResponseError;
@@ -26,6 +27,11 @@ export const create: AsyncHandler = async (req, res, next) => {
             owner: user.id
          }
       });
+
+      await es.addDocumentToIndex(<ICollectionIndex>{
+         collectionId: result.id,
+         name: result.name
+      }, "collections");
 
       res.status(codes.CREATED).json({
          ok: true,
@@ -193,6 +199,66 @@ export const removeSnipFromCollection: AsyncHandler = async (req, res, next) => 
          message: "resource updated",
          data: null
       });
+   } catch (err) {
+      error.message = err.message;
+      next(error);
+   }
+}
+
+export const updateOne: AsyncHandler = async (req, res, next) => {
+   const error = new ResponseError;
+   const { id } = req.params;
+   const { name } = req.body;
+   const user = <User>res.locals.user;
+
+   if(!id || !name) {
+      error.message = "missing/malformed field in request params/body";
+      error.statusCode = codes.BAD_REQUEST;
+
+      next(error);
+      return;
+   }
+
+   try {
+      let collection = await collectionRepository.findOne({
+         query: { id }
+      }, {
+         relations: ["owner"]
+      });
+
+      if(collection.owner.id !== user.id) {
+         error.message = "not authorized";
+         error.statusCode = codes.FORBIDDEN;
+
+         next(error);
+         return;
+      }
+
+      await collectionRepository.updateOne({
+         query: { id },
+         update: { name }
+      })
+
+      collection = await collectionRepository.findOne({
+         query: { id }
+      }, {
+         relations: [
+            "owner",
+            "snips",
+            "snips.author",
+            "snips.files",
+            "snips.source",
+            "snips.source.author"
+         ]
+      });
+
+      res.status(codes.OK).json({
+         ok: true,
+         message: "resource updated",
+         data: {
+            collection
+         }
+      })
    } catch (err) {
       error.message = err.message;
       next(error);

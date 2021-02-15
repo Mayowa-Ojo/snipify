@@ -34,6 +34,7 @@ export const getCollectionsForUser: AsyncHandler = async (req, res, next) => {
          query: { owner: user.id }
       }, {
          relations: [
+            "owner",
             "snips",
             "snips.files",
             "snips.author",

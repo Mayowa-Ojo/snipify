@@ -2,8 +2,9 @@ import codes from "http-status-codes";
 
 import * as fileRepository from "~repository/file.repository";
 import * as s3 from "~services/s3.service";
+import * as es from "~services/es.service";
 import { mapExtensionToLanguage, ResponseError } from "~utils/index";
-import type { AsyncHandler } from "~declarations/index";
+import type { AsyncHandler, IFileIndex } from "~declarations/index";
 
 export const create: AsyncHandler = async (req, res, next) => {
    const error = new ResponseError;
@@ -27,6 +28,12 @@ export const create: AsyncHandler = async (req, res, next) => {
          objectKey: result.Key,
          objectLocation: result.Location
       }});
+
+      await es.addDocumentToIndex(<IFileIndex>{
+         fileId: file.id,
+         filename: file.filename,
+         language: file.language
+      }, "files");
 
       res.status(codes.CREATED).json({
          ok: true,

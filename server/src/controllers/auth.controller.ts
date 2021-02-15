@@ -155,7 +155,12 @@ export const revokeToken: AsyncHandler = async (req, res, next) => {
    try {
       await userRepository.updateOne({
          query: { id: user.id },
-         update: { revokedTokens: [...user.revokedTokens, accessToken] }
+         update: { 
+            revokedTokens: user.revokedTokens.length < 50 ?
+                              [...user.revokedTokens, accessToken]
+                           :
+                              [...user.revokedTokens.filter((_, idx) => idx > 10), accessToken]
+         }
       });
 
       res.status(codes.OK).json({
