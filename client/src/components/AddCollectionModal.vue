@@ -28,12 +28,14 @@
          <div class="actions w-full flex justify-between mt-6">
             <button
                class="px-4 py-1 bg-gray-300 text-15 text-gray-600 font-medium rounded-md"
+               type="button"
                @click="closeModal"
             >Cancel</button>
             <button 
                class="px-4 py-1 bg-indigo-400 text-15 text-white font-medium rounded-md"
                :class="{'cursor-default': failed || untouched}"
                :disabled="failed || untouched"
+               type="submit"
             >Save</button>
          </div>
       </form>
@@ -42,6 +44,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import { ValidationProvider, ValidationObserver, extend } from "vee-validate"
 import { required } from "vee-validate/dist/rules"
 
@@ -63,16 +66,37 @@ export default {
    data: () => ({
       name: ""
    }),
+   computed: {
+      ...mapState({
+         modalData: (state) => state.modal.data
+      })
+   },
    methods: {
       closeModal: function() {
          this.$store.dispatch(ACTIONS.TOGGLE_MODAL, {})
       },
       handleSubmit: function() {
+         if(this.modalData.collection) {
+            this.$store.dispatch(ACTIONS.EDIT_COLLECTION, {
+               collectionId: this.modalData.collection.id,
+               data: {
+                  name: this.name
+               }
+            })
+
+            return
+         }
+
          this.$store.dispatch(ACTIONS.CREATE_COLLECTION, {
             data: {
                name: this.name
             }
          })
+      }
+   },
+   mounted: function() {
+      if(this.modalData.collection) {
+         this.name = this.modalData.collection.name
       }
    }
 }

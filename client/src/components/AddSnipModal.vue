@@ -66,14 +66,14 @@
                >
                   <button 
                      class="text-15 text-white font-medium px-3 py-1" type="submit"
-                     :class="{'cursor-default': failed || untouched}"
-                     :disabled="failed || untouched"
+                     :class="{'cursor-default': failed || (untouched && !isEditing)}"
+                     :disabled="failed || (untouched && !isEditing)"
                   >
-                     Create snip
+                     {{isEditing ? 'Update' : 'Create'}} snip
                   </button>
                   <span class="inline-block h-full px-3 py-1 border-l border-white cursor-pointer">
                      <icon data="@icon/chevron.svg" color="white" width=".6rem" height=".6rem" />
-                     <Popover :placement="'top-end'" :name="'select-permission'">
+                     <Popover :placement="'top-end'" :name="'select-permission'" :zIndex="30">
                         <ul class="">
                            <li 
                               class="text-15 text-gray-600 py-1 px-4 text-left font-medium cursor-pointer flex hover:bg-gray-100"
@@ -83,8 +83,8 @@
                                  <icon :class="{'invisible': snipPermission !== 'private'}" data="@icon/check.svg" color="#4B5563" width=".9rem" height=".9rem" />
                               </span>
                               <span class="inline-flex flex-col ml-2">
-                                 <p>Create secret snip</p>
-                                 <p class="text-12 text-gray-400 font-normal mt-1">Secret gists are hidden by default and only visible to anyone with permission.</p>
+                                 <p>Secret snip</p>
+                                 <p class="text-12 text-gray-400 font-normal mt-1">Secret snips are hidden by default and only visible to anyone with permission.</p>
                               </span>
                            </li>
                            <li 
@@ -95,8 +95,8 @@
                                  <icon :class="{'invisible': snipPermission !== 'public'}" data="@icon/check.svg" color="#4B5563" width=".9rem" height=".9rem" />
                               </span>
                               <span class="inline-flex flex-col ml-2">
-                                 <p>Create public snip</p>
-                                 <p class="text-12 text-gray-400 font-normal mt-1">Public gists are visible to everyone.</p>
+                                 <p>Public snip</p>
+                                 <p class="text-12 text-gray-400 font-normal mt-1">Public snips are visible to everyone.</p>
                               </span>
                            </li>
                         </ul>
@@ -111,6 +111,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import { nanoid } from "nanoid"
 import { ValidationProvider, ValidationObserver, extend } from "vee-validate"
 import { required } from "vee-validate/dist/rules"
@@ -118,6 +119,7 @@ import { required } from "vee-validate/dist/rules"
 import ValidationError from "./ValidationError"
 import SnipFileInput from "./SnipFileInput"
 import Popover from "./Popover"
+import httpRequest from "../services/http"
 import { ACTIONS } from "../store/types"
 
 extend("required", {
@@ -142,6 +144,12 @@ export default {
          { id: `snip_${nanoid(4)}`, filename: "", content: "" }
       ]
    }),
+   computed: {
+      ...mapState({
+         isEditing: (state) => state.modal?.data?.snips?.isEditing,
+         currentSnip: (state) => state.snips.current
+      })
+   },
    methods: {
       closeModal: function() {
          this.$store.dispatch(ACTIONS.TOGGLE_MODAL, {})
@@ -158,11 +166,24 @@ export default {
          this.files = this.files.filter(file => file.id !== id)
       },
       updateFileData: function({ id, field, value }) {
-         this.files = this.files.map(file => file.id === id ? { ...file, [field]: value } : file )
+         this.files = this.files.map(file => file.id === id ? { ...file, [field]: value } : file)
       },
-      handleSubmit: function() {
-         console.log("submitting...")
-         this.$store.dispatch(ACTIONS.CREATE_SNIP, {
+      handleSubmit: async function() {
+         if(this.isEditing) {
+            await this.$store.dispatch(ACTIONS.EDIT_SNIP, {
+               snipId: this.currentSnip.id,
+               data: {
+                  title: this.title,
+                  description: this.description,
+                  permission: this.snipPermission,
+                  files: this.files
+               }
+            })
+
+            return
+         }
+
+         await this.$store.dispatch(ACTIONS.CREATE_SNIP, {
             data: {
                title: this.title,
                description: this.description,
@@ -170,6 +191,27 @@ export default {
                files: this.files
             }
          })
+      }
+   },
+   created: async function() {
+      if(this.isEditing) {
+         this.title = this.currentSnip.title
+         this.description = this.currentSnip.description
+         this.snipPermission = this.currentSnip.permission
+
+         this.files = await Promise.all(this.currentSnip.files.map(async file => {
+            const response = await httpRequest(`/files/${file.id}`, {
+               method: "GET"
+            })
+
+            if(!response?.data) return;
+
+            return {
+               id: file.id,
+               filename: file.filename,
+               content: response.data.file.body
+            }
+         }))
       }
    }
 }
