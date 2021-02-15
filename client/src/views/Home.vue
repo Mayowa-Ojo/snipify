@@ -53,7 +53,7 @@
          </div>
       </aside>
 
-      <div class="scrollable white-border w-3/12 bg-white">
+      <div class="w-3/12 bg-white overflow-y-auto">
          <header class="flex items-center justify-between px-4 py-6">
             <div class="flex items-center">
                <icon data="@icon/folder.svg" color="#4B5563" width="1.5rem" height="1.5rem"/>
@@ -100,24 +100,14 @@
       <div class="flex flex-col w-9/12 relative">
          <Toast />
          <div class="h-16 w-full py-2 px-6 border-b-2 border-gray-300 flex justify-between items-center">
-            <div class="flex items-center h-full py-2 relative" style="width: 22rem">
-               <icon data="@icon/search.svg" color="#9CA3AF" width="1rem" height="1rem"/>
-               <input
-                  type="text"
-                  placeholder="Search by collection, description, or title..."
-                  class="w-full h-full ml-2 pl-2 pr-8 appearance-none bg-white border border-gray-200 rounded text-gray-600 text-15 focus:border-indigo-300 focus:outline-none"
-                  ref="searchInput"
-                  v-model="searchQuery"
-               />
-               <span class="absolute right-0 inline-flex items-center justify-center w-5 h-5 mr-2 rounded border border-gray-300 text-12 text-gray-400">/</span>
-            </div>
+            <SearchBox />
             <div>
                <img class="w-16" src="../assets/logo.svg" alt="brand logo">
             </div>
          </div>
 
          <div class="main-content w-full flex">
-            <div class="scrollable w-2/5 h-full border-r-2 border-gray-300">
+            <div class="w-2/5 h-full border-r-2 border-gray-300 overflow-y-auto">
                <nav class="w-full px-4 py-4" v-if="!collections.isActive">
                   <ul class="menu-tabs bg-gray-200 rounded-lg inline-flex items-center">
                      <li 
@@ -211,14 +201,21 @@
                         >{{collections.current.snips.length}}</span>
                      </p>
                      <span 
-                        class="inline-flex items-center justify-center mt-1 w-6 h-6 rounded-full cursor-pointer hover:bg-gray-200"
+                        class="inline-flex items-center justify-center w-6 h-6 rounded-full cursor-pointer hover:bg-gray-200"
                         style="min-width: 24px;"
+                        v-if="hasAdminPrivilege(collections.current.owner.id)"
                      >
                         <icon class="transform rotate-90" data="@icon/kebab_menu.svg" color="#6B7280" width="1rem" height="1rem" :fill="false" />
                         <Popover :placement="'bottom-end'">
                            <ul class="py-1">
-                              <li class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200">Edit</li>
-                              <li class="text-12 text-red-500 py-2 px-4 text-left cursor-pointer hover:bg-gray-200">Delete</li>
+                              <li 
+                                 class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                                 @click="handleEditCollection"
+                              >Edit</li>
+                              <li 
+                                 class="text-12 text-red-500 py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                                 @click="handleDeleteCollection"
+                              >Delete</li>
                            </ul>
                         </Popover>
                      </span>
@@ -298,7 +295,7 @@
             <div class="w-3/5 h-full" v-if="Object.keys(currentSnip).length < 1">
                <NoContent :message="'Select a snip to view'"/>
             </div>
-            <div class="w-3/5 h-full" v-else>
+            <div class="w-3/5 h-full overflow-y-auto" v-else>
                <header class="py-4 px-4 flex justify-between">
                   <div>
                      <p class="text-18 font-medium text-gray-600 items-center inline-block">
@@ -442,6 +439,7 @@
                                  </li>
                                  <li 
                                     class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                                    v-if="collections.isActive"
                                     @click="handleRemoveFromCollection(collections.current.id)"
                                  >Remove from collection
                                  </li>
@@ -489,12 +487,13 @@
 
 <script>
 import { nanoid } from "nanoid"
-import { mapState } from "vuex"
+import { mapGetters, mapState } from "vuex"
 
 import SnipPreview from "../components/SnipPreview"
 import Popover from "../components/Popover"
 import CodeEditor from "../components/CodeEditor"
 import Toast from "../components/Toast"
+import SearchBox from "../components/SearchBox"
 import NoContent from "../components/NoContent"
 import { ACTIONS , MUTATIONS } from "../store/types"
 
@@ -505,7 +504,8 @@ export default {
       Popover,
       Toast,
       CodeEditor,
-      NoContent
+      NoContent,
+      SearchBox
    },
    data: () => ({
       activeTab: "Feed",
@@ -514,8 +514,7 @@ export default {
          isActive: false,
          current: {}
       },
-      highlighterTheme: "tomorrow",
-      searchQuery: ""
+      highlighterTheme: "tomorrow"
    }),
    computed: {
       ...mapState({
@@ -526,6 +525,9 @@ export default {
          currentSnip: (state) => state.snips?.current || {},
          authUser: (state) => state.auth?.profile
       }),
+      ...mapGetters([
+         "hasAdminPrivilege"
+      ]),
       downloadLink: function() {
          return `${process.env.VUE_APP_API_BASE_URL}v${process.env.VUE_APP_API_VERSION}/snips/${this.currentSnip.id}/zip`
       }
@@ -556,19 +558,12 @@ export default {
 
          this.snipsFilter = val
       },
-      focusSearchInput: function(e) {
-         const searchInput = this.$refs["searchInput"]
-
-         if(e.key === "/") {
-            searchInput.focus()
-            this.searchQuery = ""
-         }
-      },
       toggleCollectionActive: function(val) {
          if(val) {
             this.collections = { ...this.collections, isActive: true, current: val }
             this.snips = { ...this.snips, current: val.snips }
 
+            this.$store.commit(MUTATIONS.UNSET_CURRENT_SNIP)
             return;
          }
          this.collections = { ...this.collections, isActive: false }
@@ -601,11 +596,31 @@ export default {
          })
       },
       handleEditSnip: async function() {
-         console.log("loading...")
+         this.$store.dispatch(ACTIONS.TOGGLE_MODAL, {
+            component: "AddSnipModal",
+            data: {
+               snips: {
+                  isEditing: true
+               }
+            }
+         })
       },
       handleDeleteSnip: async function() {
          await this.$store.dispatch(ACTIONS.DELETE_SNIP, {
             snipId: this.currentSnip.id
+         })
+      },
+      handleEditCollection: async function() {
+         this.$store.dispatch(ACTIONS.TOGGLE_MODAL, {
+            component: "AddCollectionModal",
+            data: {
+               collection: this.collections.current
+            }
+         })
+      },
+      handleDeleteCollection: async function(collectionId) {
+         await this.$store.dispatch(ACTIONS.DELETE_COLLECTION, {
+            collectionId
          })
       },
       handleLogout: async function() {
@@ -634,12 +649,6 @@ export default {
       const collectionsPromise = this.$store.dispatch(ACTIONS.FETCH_COLLECTIONS)
 
       await Promise.all([feedPromise, collectionsPromise, userSnipsPromise, starredSnipsPromise])
-   },
-   mounted: function() {
-      window.addEventListener("keyup", this.focusSearchInput.bind(this))
-   },
-   destroyed: function() {
-      window.removeEventListener("keyup", this.focusSearchInput)
    }
 }
 
