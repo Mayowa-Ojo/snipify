@@ -5,8 +5,11 @@ import * as userController from "~controllers/user.controller";
 import * as fileController from "~controllers/file.controller";
 import * as snipController from "~controllers/snip.controller";
 import * as commentController from "~controllers/comment.controller";
+import * as searchController from "~controllers/search.controller";
 import * as collectionController from "~controllers/collection.controller";
 import { authGuard } from "~middleware/index";
+import * as es from "~services/es.service";
+import { IFileIndex } from "~declarations/index";
 
 const router = Router();
 const authRouter = Router();
@@ -15,6 +18,7 @@ const fileRouter = Router();
 const snipRouter = Router();
 const collectionRouter = Router();
 const commentRouter = Router();
+const searchRouter = Router();
 
 authRouter.post("/", authController.authenticate);
 authRouter.post("/re-authenticate", authController.reAuthenticate);
@@ -33,6 +37,7 @@ snipRouter.get("/:id/zip", snipController.generateZipFile);
 snipRouter.get("/:id/comments", authGuard, snipController.getCommentsForSnip)
 snipRouter.post("/", authGuard, snipController.create);
 snipRouter.post("/:id/fork", authGuard, snipController.createFork);
+snipRouter.patch("/:id", authGuard, snipController.updateOne);
 snipRouter.patch("/:id/star", authGuard, snipController.starSnipByUser);
 snipRouter.patch("/:id/permission", authGuard, snipController.updatePermission);
 snipRouter.delete("/:id", authGuard, snipController.deleteOne);
@@ -43,10 +48,37 @@ commentRouter.get("/:id", authGuard, commentController.getOne);
 commentRouter.patch("/:id/like", authGuard, commentController.likeByUser);
 commentRouter.delete("/:id", authGuard, commentController.deleteOne);
 
+searchRouter.post("/index", authGuard, searchController.createIndex);
+searchRouter.get("/", authGuard, searchController.searchByQuery);
+searchRouter.post("/index/document", async (req, res, next) => {
+   try {
+      const { doc } = req.body;
+
+      const result = await es.addDocumentToIndex(<IFileIndex>{
+         fileId: doc.fileId,
+         filename: doc.filename,
+         language: doc.language,
+      }, "files");
+
+      res.status(200).json({
+         ok: true,
+         message: "resource updated",
+         data: {
+            result
+         }
+      });
+   } catch (err) {
+      next(err);
+   }
+});
+searchRouter.delete("/:id", authGuard, searchController.deleteDocument);
+
+
 collectionRouter.post("/", authGuard, collectionController.create);
 collectionRouter.get("/:id", authGuard, collectionController.getOne);
 collectionRouter.patch("/:id/snip/add", authGuard, collectionController.addSnipToCollection);
 collectionRouter.patch("/:id/snip/remove", authGuard, collectionController.removeSnipFromCollection);
+collectionRouter.patch("/:id", authGuard, collectionController.updateOne);
 collectionRouter.delete("/:id", authGuard, collectionController.deleteOne);
 
 router.use("/auth", authRouter);
@@ -55,5 +87,6 @@ router.use("/files", fileRouter);
 router.use("/snips", snipRouter);
 router.use("/collections", collectionRouter);
 router.use("/comments", commentRouter);
+router.use("/search", searchRouter);
 
 export default router;
