@@ -5,7 +5,9 @@ import Snip from "~entity/snip.entity";
 import Collection from "~entity/collection.entity";
 import User from "~entity/user.entity";
 import Comment from "~entity/comment.entity";
+import { String } from "aws-sdk/clients/apigateway";
 
+// Config
 declare interface IEnvConfig {
    PORT: string | number
    NODE_ENV: string
@@ -24,14 +26,32 @@ declare interface IEnvConfig {
    GITHUB_OAUTH_CLIENT_SECRET: string
    GITHUB_OAUTH_URL: string
    GITHUB_USER_URL: string
+   ELASTIC_SEARCH_HOST: string
 }
 
+// Database
 declare type IBaseEntity = User | Collection | Snip | File | Comment
-
 declare interface IRepositoryPayload {
    data?: any
    query?: any
    update?: any
 }
 
+// Presenter
 declare type AsyncHandler = (req: Request, res: Response, next?: NextFunction) => Promise<void>
+
+// Elastic-search
+declare interface ISnipIndex {
+   snipId: string
+   title: string
+   description: string
+}
+declare interface IFileIndex {
+   fileId: String
+   filename: string
+   language: string
+}
+declare interface ICollectionIndex {
+   collectionId: string
+   name: string
+}
