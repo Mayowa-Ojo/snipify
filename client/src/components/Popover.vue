@@ -2,9 +2,11 @@
    <TippyComponent
       :name="name"
       :placement="placement"
+      :zIndex="zIndex || 20"
       animation="fade"
       trigger="click"
       interactive="true"
+      hideOnClick="true"
       theme="light"
    >
       <slot></slot>
@@ -18,7 +20,7 @@ export default {
    components: {
       TippyComponent
    },
-   props: ["placement", "name"]
+   props: ["placement", "name", "zIndex"]
 }
 
 </script>
