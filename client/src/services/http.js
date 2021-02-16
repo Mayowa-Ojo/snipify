@@ -21,7 +21,10 @@ const interceptExpiredTokenError = async (err) => {
          content: "Please sign in with your github account."
       })
 
+      return
    }
+
+   return Promise.reject(err)
 }
 
 /**
@@ -41,7 +44,7 @@ export const injectAuthHeader = (headers) => {
 
 // Request interceptor - add authorization header to every request
 axios.interceptors.request.use((config) => {
-   if(config.url.indexOf("/auth") != -1) return config
+   if(config.url.indexOf("/auth") != -1 && config.url.indexOf("/revoke-token") == -1) return config
 
    injectAuthHeader(config.headers)
    return config
