@@ -378,7 +378,7 @@
                      </span>
                      <div class="ml-4">
                         <p class="text-18 font-medium text-gray-600">{{currentSnip.author.name}}</p>
-                        <p class="text-12 font-normal text-gray-400">Created 3 weeks ago</p>
+                        <p class="text-12 font-normal text-gray-400">Created {{getTimeSince(currentSnip.createdAt, 'long')}}</p>
                      </div>
                   </div>
                   <div class="flex items-center">
@@ -396,6 +396,8 @@
                         content="Star"
                         class="h-8 px-2 bg-gray-200 rounded-none inline-flex items-center justify-center border-t border-b border-r border-gray-300 hover:bg-gray-300"
                         @click="handleStarSnip"
+                        :disabled="authUser.starred.includes(currentSnip.id)"
+                        :class="{'cursor-default': authUser.starred.includes(currentSnip.id)}"
                      >
                         <icon class="" data="@icon/star.svg" :color="authUser.starred.includes(currentSnip.id) ? '#818CF8' : '#6B7280'" width=".8rem" height=".8rem"/>
                         <span 
@@ -408,6 +410,8 @@
                         content="Fork"
                         class="h-8 px-2 bg-gray-200 rounded-none inline-flex items-center justify-center border-t border-b border-gray-300 hover:bg-gray-300"
                         @click="handleForkSnip"
+                        :disabled="authUser.forked.includes(currentSnip.id)"
+                        :class="{'cursor-default': authUser.forked.includes(currentSnip.id)}"
                      >
                         <icon class="" data="@icon/fork.svg" :color="authUser.forked.includes(currentSnip.id) ? '#818CF8' : '#6B7280'" width="1rem" height="1rem"/>
                         <span 
@@ -421,13 +425,14 @@
                            <div>
                               <ul class="py-1">
                                  <li 
-                                    class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                                    class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200 focus:outline-none"
+                                    v-if="!collections.isActive"
                                  >Add to collection
                                  <Popover :placement="'left-start'">
                                     <div class="py-1 bg-white">
                                     <ul class="scrollable white-border my-1" style="max-height: 250px;">
                                        <li 
-                                          class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                                          class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200 focus:outline-none"
                                           v-for="(collection) in userCollections"
                                           :key="collection.id"
                                           @click="handleAddToCollection(collection.id)"
@@ -451,10 +456,12 @@
                                  <li 
                                     class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
                                     @click="handleEditSnip"
+                                    v-if="hasAdminPrivilege(currentSnip.author.id)"
                                  >Edit</li>
                                  <li 
                                     class="text-12 text-red-500 py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
                                     @click="handleDeleteSnip"
+                                    v-if="hasAdminPrivilege(currentSnip.author.id)"
                                  >Delete</li>
                               </ul>
                            </div>
@@ -486,7 +493,6 @@
 </template>
 
 <script>
-import { nanoid } from "nanoid"
 import { mapGetters, mapState } from "vuex"
 
 import SnipPreview from "../components/SnipPreview"
@@ -496,6 +502,7 @@ import Toast from "../components/Toast"
 import SearchBox from "../components/SearchBox"
 import NoContent from "../components/NoContent"
 import { ACTIONS , MUTATIONS } from "../store/types"
+import { dateMixin } from "../utils/mixins"
 
 export default {
    name: "Home",
@@ -507,6 +514,7 @@ export default {
       NoContent,
       SearchBox
    },
+   mixins: [dateMixin],
    data: () => ({
       activeTab: "Feed",
       snipsFilter: "Recently created",
@@ -541,7 +549,7 @@ export default {
          }
 
          this.highlighterTheme = theme
-         this.editors = this.editors.map(obj => ({ ...obj, key: nanoid(5) }))
+         // this.editors = this.editors.map(obj => ({ ...obj, key: nanoid(5) }))
       },
       toggleModal: function(modal) {
          this.$store.dispatch(ACTIONS.TOGGLE_MODAL, {

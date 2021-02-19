@@ -29,10 +29,11 @@ userRouter.get("/:id/snips", authGuard, userController.getSnipsForUser);
 userRouter.get("/:id/starred", authGuard, userController.getStarredSnipsForUser);
 
 fileRouter.post("/", authGuard, fileController.create);
-fileRouter.get("/:id", authGuard, fileController.getFileObject)
+fileRouter.get("/:id", authGuard, fileController.getOne)
 fileRouter.delete("/:id", authGuard, fileController.deleteOne);
 
 snipRouter.get("/feed", authGuard, snipController.getFeed);
+snipRouter.get("/:id", snipController.getOne);
 snipRouter.get("/:id/zip", snipController.generateZipFile);
 snipRouter.get("/:id/comments", authGuard, snipController.getCommentsForSnip)
 snipRouter.post("/", authGuard, snipController.create);
@@ -45,6 +46,7 @@ snipRouter.delete("/:id", authGuard, snipController.deleteOne);
 commentRouter.post("/", authGuard, commentController.create);
 commentRouter.post("/:id/reply", authGuard, commentController.createReply);
 commentRouter.get("/:id", authGuard, commentController.getOne);
+commentRouter.patch("/:id", authGuard, commentController.updateOne)
 commentRouter.patch("/:id/like", authGuard, commentController.likeByUser);
 commentRouter.delete("/:id", authGuard, commentController.deleteOne);
 

@@ -19,15 +19,18 @@
          <span class="inline-block w-8 h-8 rounded-full overflow-hidden">
             <img class="image-cover" :src="snip.author.avatar" alt="user avatar">
          </span>
-         <span class="text-12 font-medium text-gray-600 mt-2">12h</span>
+         <span class="text-12 font-medium text-gray-600 mt-2">{{getTimeSince(snip.createdAt, 'short')}}</span>
       </div>
    </div>
 </template>
 
 <script>
+import { dateMixin } from "../utils/mixins"
+
 export default {
    name: "SnipPreview",
-   props: ["snip", "isActive"]
+   props: ["snip", "isActive"],
+   mixins: [dateMixin]
 }
 
 </script>

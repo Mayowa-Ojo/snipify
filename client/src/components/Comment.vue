@@ -5,7 +5,7 @@
          <span class="w-8 h-8 inline-block rounded-full overflow-hidden" style="min-height: 32px;">
             <img class="image-cover" :src="comment.author.avatar" alt="user avatar">
             <span class="absolute bottom-0" style="right: -2px;">
-               <icon data="@icon/heart.svg" color="#F87171" width=".8rem" height=".8rem" />
+               <icon data="@icon/heart.svg" color="#F87171" width=".8rem" height=".8rem" v-if="comment.likedBy.includes(authUser.id)"/>
             </span>
          </span>
          </span>
@@ -23,7 +23,7 @@
                   <span 
                      class="cursor-pointer hover:underline"
                      @click="$emit('like-comment', { isReply: false, commentId: comment.id })"
-                  >Like</span>
+                  >{{comment.likedBy.includes(authUser.id) ? 'Liked' : 'Like'}}</span>
                   <span 
                      class="bg-gray-200" 
                      style="font-size: 11px; padding: 0 3px; margin-left: 4px; border-radius: 4px;"
@@ -58,13 +58,22 @@
             </div>
             </div>
             <div class="h-full flex flex-col justify-center pt-4">
-               <span class="inline-flex items-center justify-center w-6 h-6 cursor-pointer rounded-full opacity-0 hover:bg-gray-100 focus:opacity-100 group-hover:opacity-100">
+               <span class="inline-flex items-center justify-center w-6 h-6 cursor-pointer rounded-full opacity-100 hover:bg-gray-100 focus:opacity-100 group-hover:opacity-100">
                   <icon class="transform rotate-90" data="@icon/kebab_menu.svg" color="#9CA3AF" :fill="false" width="1rem" height="1rem" />
-                  <Popover :placement="'bottom-end'">
+                  <Popover :placement="'bottom-end'" :zIndex="40">
                      <div>
                         <ul class="py-1">
-                           <li class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200">Edit comment</li>
-                           <li class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200">Delete comment</li>
+                           <li 
+                              class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                              v-if="hasAdminPrivilege(comment.author.id)"
+                              @click="$emit('edit-comment', { comment, isReply: false })"
+                           >Edit comment</li>
+                           <li 
+                              class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                              v-if="hasAdminPrivilege(comment.author.id)"
+                              @click="handleDeleteComment(comment.id, false)"
+                           >Delete comment</li>
+                           <li class="text-12 text-red-500 py-2 px-4 text-left cursor-pointer hover:bg-gray-200">Report</li>
                         </ul>
                      </div>
                   </Popover>
@@ -79,14 +88,14 @@
                <span class="w-8 h-8 inline-block rounded-full overflow-hidden" style="min-height: 32px;">
                   <img class="image-cover" :src="reply.author.avatar" alt="user avatar">
                   <span class="absolute bottom-0" style="right: -2px;">
-                     <icon data="@icon/heart.svg" color="#F87171" width=".8rem" height=".8rem" />
+                     <icon data="@icon/heart.svg" color="#F87171" width=".8rem" height=".8rem" v-if="reply.likedBy.includes(authUser.id)" />
                   </span>
                </span>
                </span>
             </div>
-            <div class="ml-4 pb-4">
+            <div class="ml-4 pb-4 flex-auto">
                <div class="group flex">
-                  <div>
+                  <div class="flex-auto">
                   <p class="text-15 text-gray-400">
                      <span class="font-medium text-gray-600 mr-1">{{reply.author.name}}</span> 
                      {{reply.content}}
@@ -96,7 +105,7 @@
                         <span 
                            class="cursor-pointer hover:underline"
                            @click="$emit('like-comment', { isReply: true, commentId: reply.id })"
-                        >Like</span>
+                        >{{reply.likedBy.includes(authUser.id) ? 'Liked' : 'Like'}}</span>
                         <span 
                            class="bg-gray-200" 
                            style="font-size: 11px; padding: 0 3px; margin-left: 4px; border-radius: 4px;"
@@ -110,11 +119,20 @@
                   <div class="h-full flex flex-col justify-center pt-4">
                      <span class="inline-flex items-center justify-center w-6 h-6 cursor-pointer opacity-0 rounded-full hover:bg-gray-100 focus:opacity-100 group-hover:opacity-100">
                         <icon class="transform rotate-90" data="@icon/kebab_menu.svg" color="#9CA3AF" :fill="false" width="1rem" height="1rem" />
-                        <Popover :placement="'bottom-end'">
+                        <Popover :placement="'bottom-end'" :zIndex="40">
                            <div>
                               <ul class="py-1">
-                                 <li class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200">Edit comment</li>
-                                 <li class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200">Delete comment</li>
+                                 <li 
+                                    class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                                    v-if="hasAdminPrivilege(reply.author.id)"
+                                    @click="$emit('edit-comment', { comment: reply, isReply: true })"
+                                 >Edit comment</li>
+                                 <li 
+                                    class="text-12 text-gray-600 py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                                    v-if="hasAdminPrivilege(reply.author.id)"
+                                    @click="handleDeleteComment(reply.id, true, comment.id)"
+                                 >Delete comment</li>
+                                 <li class="text-12 text-red-500 py-2 px-4 text-left cursor-pointer hover:bg-gray-200">Report</li>
                               </ul>
                            </div>
                         </Popover>
@@ -129,7 +147,10 @@
 </template>
 
 <script>
+import { mapGetters, mapState } from 'vuex'
+
 import Popover from "./Popover"
+import { ACTIONS } from "../store/types"
 
 export default {
    name: "Comment",
@@ -140,9 +161,24 @@ export default {
    data: () => ({
       showReplies: false
    }),
+   computed: {
+      ...mapState({
+         authUser: (state) => state.auth.profile
+      }),
+      ...mapGetters([
+         "hasAdminPrivilege"
+      ])
+   },
    methods: {
       toggleReplies: function() {
          this.showReplies = !this.showReplies
+      },
+      handleDeleteComment: async function(commentId, isReply, parentId) {
+         await this.$store.dispatch(ACTIONS.DELETE_COMMENT, {
+            commentId,
+            isReply,
+            parentId
+         })
       }
    }
 }

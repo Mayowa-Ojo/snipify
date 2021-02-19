@@ -1,5 +1,15 @@
 <template>
-   <div class="wrapper bg-white rounded-xl overflow-hidden flex flex-col">
+   <div class="wrapper bg-white rounded-xl overflow-hidden flex flex-col relative">
+      <div 
+         class="absolute inset-0 bg-gray-900 bg-opacity-50 w-full h-full z-30 flex justify-center items-center"
+         v-if="commentLoading"
+      >
+         <svg style="background:transparent;display:block;" width="50px" height="50px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+            <circle cx="50" cy="50" r="32" stroke-width="8" stroke="white" stroke-dasharray="50.26548245743669 50.26548245743669" fill="none" stroke-linecap="round">
+            <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur=".7s" keyTimes="0;1" values="0 50 50;360 50 50"></animateTransform>
+            </circle>
+         </svg>
+      </div>
       <header class="px-4 py-4 flex justify-between items-center bg-gray-100">
          <div class="flex items-center">
             <span 
@@ -28,6 +38,7 @@
             :comment="comment"
             v-on:toggle-is-replying="toggleIsReplying($event)"
             v-on:like-comment="handleLikeComment($event)"
+            v-on:edit-comment="toggleIsEditing($event)"
          />
          <div class="w-full h-8 rounded-full bg-gray-100 flex items-center justify-center" style="min-height: 32px">
             <p class="text-12 font-medium text-gray-400 text-center">No more comments...</p>
@@ -36,7 +47,7 @@
       <footer class="w-full pb-6 pt-4 px-8 relative">
          <div class="input-box w-full h-10 px-2 bg-gray-100 rounded-xl border border-gray-200 flex items-center relative z-20">
             <span class="w-6 h-6 rounded-full overflow-hidden inline-block">
-               <img class="image-cover" src="https://images.unsplash.com/photo-1456327102063-fb5054efe647?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=f05c14dd4db49f08a789e6449604c490" alt="user avatar">
+               <img class="image-cover" :src="authUser.avatar" alt="user avatar">
             </span>
             <input 
                type="text"
@@ -57,21 +68,26 @@
          <transition name="fade">
          <div 
             class="reply-overlay bg-white border border-gray-300 absolute mx-auto px-4 pt-3 pb-16 flex z-10"
-            v-if="reply.isReplying"
+            v-if="reply.isReplying || edit.isEditing"
          >
             <div class="flex flex-col h-full items-center">
                <span>
-                  <icon data="@icon/reply.svg" color="#4B5563" width=".9rem" height=".9rem" />
+                  <icon data="@icon/reply.svg" color="#4B5563" width=".9rem" height=".9rem" v-if="reply.isReplying" />
+                  <icon data="@icon/pen.svg" color="#4B5563" width="1rem" height="1rem" v-if="edit.isEditing" />
                </span>
             </div>
-            <div class="flex-auto flex flex-col ml-3">
+            <div class="flex-auto flex flex-col ml-3" v-if="reply.isReplying">
                <p class="text-15 font-medium text-gray-600">Replying to {{reply.comment.author.name}}:</p>
                <p class="text-15 text-gray-400 mt-2">{{reply.comment.content}}</p>
+            </div>
+            <div class="flex-auto flex flex-col ml-3" v-if="edit.isEditing">
+               <p class="text-15 font-medium text-gray-600">Edited by {{edit.comment.author.name}}:</p>
+               <!-- <p class="text-15 text-gray-400 mt-2">{{reply.comment.content}}</p> -->
             </div>
             <div class="flex flex-col">
                <span 
                   class="inline-flex items-center justify-center w-6 h-6 rounded-full cursor-pointer hover:bg-gray-200"
-                  @click="toggleIsReplying()"
+                  @click="toggleIsReplying();toggleIsEditing({})"
                >
                   <icon data="@icon/x.svg" color="#4B5563" width=".75rem" height=".75rem" />
                </span>
@@ -100,11 +116,18 @@ export default {
       reply: {
          isReplying: false,
          comment: {}
+      },
+      edit: {
+         isEditing: false,
+         isReply: false,
+         comment: {}
       }
    }),
    computed: {
       ...mapState({
-         snipComments: (state) => state.comments.all
+         snipComments: (state) => state.comments.all,
+         commentLoading: (state) => state.status === "comment-loading",
+         authUser: (state) => state.auth.profile
       })
    },
    methods: {
@@ -122,7 +145,20 @@ export default {
             return
          }
 
+         this.toggleIsEditing({})
          this.reply = { ...this.reply, isReplying: true, comment }
+         this.setInputFocus()
+      },
+      toggleIsEditing: function({ comment, isReply }) {
+         if(!comment) {
+            this.edit = { ...this.edit, isEditing: false, isReply: false, comment: {}}
+            this.commentInput = ""
+            return
+         }
+
+         this.toggleIsReplying()
+         this.edit = { ...this.edit, isEditing: true, isReply, comment }
+         this.commentInput = comment.content
          this.setInputFocus()
       },
       handleSubmit: async function() {
@@ -137,6 +173,20 @@ export default {
             })
 
             this.toggleIsReplying()
+            this.commentInput = ""
+            return
+         }
+
+         if(this.edit.isEditing) {
+            await this.$store.dispatch(ACTIONS.EDIT_COMMENT, {
+               commentId: this.edit.comment.id,
+               isReply: this.edit.isReply,
+               data: {
+                  content: this.commentInput
+               }
+            })
+
+            this.toggleIsEditing({})
             this.commentInput = ""
             return
          }

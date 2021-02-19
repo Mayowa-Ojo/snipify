@@ -114,22 +114,34 @@ export default new Vuex.Store({
          const collections = [collection, ...state.collections.all]
          state.collections = { ...state.collections, all: collections }
       },
-      [MUTATIONS.UPDATE_COMMENTS]: function(state, { comment, willReplace }) {
+      [MUTATIONS.UPDATE_COMMENTS]: function(state, { comment, willReplace, willRemove }) {
          if(willReplace) {
             const index = state.comments.all.findIndex(el => el.id === comment.id)
             state.comments.all.splice(index, 1, comment)
             return
          }
 
+         if(willRemove) {
+            const filtered = state.comments.all.filter(el => comment.id != el.id)
+            Vue.set(state.comments, "all", filtered)
+            return
+         }
+
          const comments = [comment, ...state.comments.all]
          state.comments = { ...state.comments, all: comments }
       },
-      [MUTATIONS.UPDATE_COMMENT_REPLIES]: function(state, { reply, id, willReplace }) {
+      [MUTATIONS.UPDATE_COMMENT_REPLIES]: function(state, { reply, id, willReplace, willRemove }) {
          const index = state.comments.all.findIndex(comment => comment.id === id)
 
          if(willReplace) {
             const replyIndex = state.comments.all[index].replies.findIndex(el => el.id === reply.id)
             state.comments.all[index].replies.splice(replyIndex, 1, reply)
+            return
+         }
+
+         if(willRemove) {
+            const replyIndex = state.comments.all[index].replies.findIndex(el => el.id === reply.id)
+            state.comments.all[index].replies.splice(replyIndex, 1)
             return
          }
 
@@ -314,11 +326,6 @@ export default new Vuex.Store({
          commit(MUTATIONS.SET_STATUS, "comment-loading")
          const { data, snipId } = payload
 
-         if(!snipId) {
-            console.warn("[WARNING]: invalid payload")
-            return;
-         }
-
          const response = await httpRequest(`/comments?snipId=${snipId}`, {
             method: "POST",
             data: { ...data }
@@ -335,11 +342,6 @@ export default new Vuex.Store({
       [ACTIONS.CREATE_COMMENT_REPLY]: async function({ commit, state }, payload) {
          // commit(MUTATIONS.SET_STATUS, "loading")
          const { data, commentId } = payload
-
-         if(!commentId) {
-            console.warn("[WARNING]: invalid payload")
-            return;
-         }
 
          const response = await httpRequest(`/comments/${commentId}/reply`, {
             method: "POST",
@@ -447,14 +449,7 @@ export default new Vuex.Store({
 
          const { snipId } = payload
 
-         if(!snipId) {
-            console.warn("[WARNING]: invalid payload")
-            commit(MUTATIONS.SET_STATUS, "error")
-
-            return
-         }
-
-         const response = await httpRequest(`/snips/${payload.snipId}/comments`, {
+         const response = await httpRequest(`/snips/${snipId}/comments`, {
             method: "GET"
          })
 
@@ -499,15 +494,33 @@ export default new Vuex.Store({
 
          router.go(0)
       },
+      [ACTIONS.EDIT_COMMENT]: async function({ commit, state }, payload) {
+         const { commentId, isReply, data } = payload
+
+         const response = await httpRequest(`/comments/${commentId}`, {
+            method: "PATCH",
+            data: { ...data }
+         })
+
+         if(state.status === "error") return
+
+         if(isReply) {
+            commit(MUTATIONS.UPDATE_COMMENT_REPLIES, {
+               reply: response.data.comment,
+               id: response.data.comment.parent.id,
+               willReplace: true
+            })
+         } else {
+            commit(MUTATIONS.UPDATE_COMMENTS, {
+               comment: response.data.comment,
+               willReplace: true
+            })
+         }
+
+         commit(MUTATIONS.SET_STATUS, "done")
+      },
       [ACTIONS.LIKE_COMMENT]: async function({ commit, state }, payload) {
          const { commentId, isReply } = payload
-
-         if(!commentId) {
-            console.warn("[WARNING]: invalid payload")
-
-            commit(MUTATIONS.SET_STATUS, "error")
-            return
-         }
 
          const response = await httpRequest(`/comments/${commentId}/like`, {
             method: "PATCH"
@@ -533,13 +546,6 @@ export default new Vuex.Store({
       [ACTIONS.STAR_SNIP]: async function({ commit, state }, payload) {
          const { snipId } = payload
 
-         if(!snipId) {
-            console.warn("[WARNING]: invalid payload")
-
-            commit(MUTATIONS.SET_STATUS, "error")
-            return
-         }
-
          const response = await httpRequest(`/snips/${snipId}/star`, {
             method: "PATCH"
          })
@@ -561,13 +567,6 @@ export default new Vuex.Store({
 
          const { snipId } = payload
 
-         if(!snipId) {
-            console.warn("[WARNING]: invalid payload")
-
-            commit(MUTATIONS.SET_STATUS, "error")
-            return
-         }
-
          const response = await httpRequest(`/snips/${snipId}/fork`, {
             method: "POST"
          })
@@ -587,13 +586,6 @@ export default new Vuex.Store({
       [ACTIONS.ADD_SNIP_TO_COLLECTION]: async function({ commit, state }, payload) {
          const { snipId, collectionId } = payload
 
-         if(!snipId || !collectionId) {
-            console.warn("[WARNING]: invalid payload")
-
-            commit(MUTATIONS.SET_STATUS, "error")
-            return
-         }
-
          const response = await httpRequest(`collections/${collectionId}/snip/add?snipId=${snipId}`, {
             method: "PATCH"
          })
@@ -610,13 +602,6 @@ export default new Vuex.Store({
       [ACTIONS.REMOVE_SNIP_FROM_COLLECTION]: async function({ commit, state }, payload) {
          commit(MUTATIONS.SET_STATUS, "loading")
          const { snipId, collectionId } = payload
-
-         if(!snipId || !collectionId) {
-            console.warn("[WARNING]: invalid payload")
-
-            commit(MUTATIONS.SET_STATUS, "error")
-            return
-         }
 
          await httpRequest(`collections/${collectionId}/snip/remove?snipId=${snipId}`, {
             method: "PATCH"
@@ -637,13 +622,6 @@ export default new Vuex.Store({
       [ACTIONS.DELETE_SNIP]: async function({ commit, state }, payload) {
          const { snipId } = payload
 
-         if(!snipId) {
-            console.warn("[WARNING]: invalid payload")
-
-            commit(MUTATIONS.SET_STATUS, "error")
-            return
-         }
-
          await httpRequest(`/snips/${snipId}`, {
             method: "DELETE",
          })
@@ -657,13 +635,6 @@ export default new Vuex.Store({
       [ACTIONS.DELETE_COLLECTION]: async function({ commit, state }, payload) {
          const { collectionId } = payload
 
-         if(!collectionId) {
-            console.warn("[WARNING]: invalid payload")
-
-            commit(MUTATIONS.SET_STATUS, "error")
-            return
-         }
-
          await httpRequest(`/collections/${collectionId}`, {
             method: "DELETE",
          })
@@ -673,6 +644,30 @@ export default new Vuex.Store({
          commit(MUTATIONS.SET_STATUS, "done")
 
          router.go(0)
+      },
+      [ACTIONS.DELETE_COMMENT]: async function({ commit, state }, payload) {
+         const { commentId, isReply, parentId } = payload
+
+         await httpRequest(`/comments/${commentId}`, {
+            method: "DELETE",
+         })
+
+         if(state.status === "error") return
+
+         if(isReply) {
+            commit(MUTATIONS.UPDATE_COMMENT_REPLIES, {
+               reply: { id: commentId },
+               id: parentId,
+               willRemove: true
+            })
+         } else {
+            commit(MUTATIONS.UPDATE_COMMENTS, {
+               comment: { id: commentId },
+               willRemove: true
+            })
+         }
+
+         commit(MUTATIONS.SET_STATUS, "done")
       }
    },
    getters: {

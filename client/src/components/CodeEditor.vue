@@ -11,6 +11,7 @@
                v-tippy
                content="Copy file"
                class="w-6 h-6 inline-flex items-center justify-center cursor-pointer"
+               @click="handleFileCopy"
             >
                <icon class="" data="@icon/copy.svg" color="#9CA3AF" width="1rem" height="1rem" />
             </span>
@@ -68,6 +69,7 @@ import 'prismjs/components/prism-go';
 // import 'prismjs/themes/prism-twilight.css'; // import syntax highlighting styles
 import Popover from "../components/Popover"
 import httpRequest from "../services/http"
+import { MUTATIONS } from "../store/types"
 import { fileIconMixin } from "../utils/mixins"
 
 export default {
@@ -98,6 +100,23 @@ export default {
       importTheme: function(theme) {
          return import(`prismjs/themes/prism-${theme}.css`)
       },
+      handleFileCopy: function() {
+         const selector = document.createElement("textarea")
+
+         selector.setAttribute("style", "opacity: 0; position: absolute; left: 9999px;")
+         selector.value = this.code
+
+         document.body.appendChild(selector)
+         selector.select()
+
+         document.execCommand("copy")
+         document.body.removeChild(selector)
+
+         this.$store.commit(MUTATIONS.TOGGLE_TOAST, {
+            type: "success",
+            content: "File copied to clipboard. 📋"
+         })
+      }
    },
    created: async function() {
       const response = await httpRequest(`/files/${this.file.id}`, {
@@ -109,7 +128,7 @@ export default {
       this.code = response.data.file.body
 
       this.LOC = response.data.file.body.split("\n").length
-      // not the proudest code I've written tbh...
+      // not the proudest piece code I've written tbh...
       this.fileSize = response.data.file.size / 1000 > 999 ?
          (response.data.file.size / 1000 / 1000).toFixed(2) + " Mb"
       :
