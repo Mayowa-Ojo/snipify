@@ -48,12 +48,12 @@ export const create: AsyncHandler = async (req, res, next) => {
    }
 }
 
-export const getFileObject: AsyncHandler = async (req, res, next) => {
+export const getOne: AsyncHandler = async (req, res, next) => {
    const error = new ResponseError;
    const { id } = req.params;
 
    if(!id) {
-      error.message = "missing/malformed field in request body";
+      error.message = "missing/malformed field in request param";
       error.statusCode = codes.BAD_REQUEST;
 
       next(error);
@@ -63,6 +63,8 @@ export const getFileObject: AsyncHandler = async (req, res, next) => {
    try {
       const file = await fileRepository.findOne({
          query: { id }
+      }, {
+         relations: ["snip"]
       });
 
       if(!file) {
@@ -81,7 +83,8 @@ export const getFileObject: AsyncHandler = async (req, res, next) => {
          data: {
             file: {
                body: result.Body,
-               size: result.ContentLength
+               size: result.ContentLength,
+               ...file
             }
          }
       });

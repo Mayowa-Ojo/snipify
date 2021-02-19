@@ -152,6 +152,67 @@ export const getOne: AsyncHandler = async (req, res, next) => {
    }
 }
 
+export const updateOne: AsyncHandler = async (req, res, next) => {
+   const error = new ResponseError;
+   const { id } = req.params;
+   const { content } = req.body;
+   const user = <User>res.locals.user;
+
+   if(!id || !content) {
+      error.message = "missing/malformed field in request params/body";
+      error.statusCode = codes.BAD_REQUEST;
+
+      next(error);
+      return;
+   }
+
+   try {
+      let comment = await commentRepository.findOne({
+         query: { id }
+      }, {
+         relations: ["parent", "author"]
+      });
+
+      if(!comment) {
+         error.message = "resource doesn't exist";
+         error.statusCode = codes.NOT_FOUND;
+
+         next(error);
+         return;
+      }
+
+      if(comment.author.id !== user.id) {
+         error.message = "not authorized";
+         error.statusCode = codes.FORBIDDEN;
+
+         next(error);
+         return;
+      }
+
+      await commentRepository.updateOne({
+         query: { id },
+         update: { content }
+      });
+
+      comment = await commentRepository.findOne({
+         query: { id }
+      }, {
+         relations: comment.parent ? ["author", "parent"] : ["replies", "author", "replies.author"]
+      });
+
+      res.status(codes.OK).json({
+         ok: true,
+         message: "resource updated",
+         data: {
+            comment
+         }
+      });
+   } catch (err) {
+      error.message = err.message;
+      next(error);
+   }
+}
+
 export const deleteOne: AsyncHandler = async (req, res, next) => {
    const error = new ResponseError;
    const { id } = req.params;

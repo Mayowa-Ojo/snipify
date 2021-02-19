@@ -79,6 +79,38 @@ export const create: AsyncHandler = async (req, res, next) => {
    }
 }
 
+export const getOne: AsyncHandler = async (req, res, next) => {
+   const error = new ResponseError;
+   const { id } = req.params;
+
+   if(!id) {
+      error.message = "missing/malformed field in request params";
+      error.statusCode = codes.BAD_REQUEST;
+
+      next(error);
+      return;
+   }
+
+   try {
+      const snip = await snipRespository.findOne({
+         query: { id }
+      }, {
+         relations: ["files", "author", "source", "source.author", "source.files"]
+      });
+
+      res.status(codes.OK).json({
+         ok: true,
+         message: "resources found",
+         data: {
+            snip
+         }
+      });
+   } catch (err) {
+      error.message = err.message;
+      next(error);
+   }
+}
+
 export const getFeed: AsyncHandler = async (_req, res, next) => {
    const error = new ResponseError;
 
