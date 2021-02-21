@@ -8,3 +8,9 @@ logs:
 
 restart:
 	heroku ps:restart web
+
+addon-postgres:
+	heroku addons:create heroku-postgresql:hobby-dev
+
+pg-info:
+	heroku pg:info
