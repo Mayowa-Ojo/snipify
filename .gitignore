@@ -7,5 +7,6 @@ build/
 *.env
 *.env.production
 *.env.development
+*.env.json
 _notes.md
 *.http
