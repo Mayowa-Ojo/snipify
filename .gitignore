@@ -1,6 +1,7 @@
 node_modules/
 dist/
 build/
+*/cypress/integration/examples
 .DS_Store
 *.log
 *.env
