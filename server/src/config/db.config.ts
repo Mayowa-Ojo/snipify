@@ -14,7 +14,9 @@ const connectDB = async (): Promise<Connection | void> => {
       if(config.NODE_ENV === "production") {
          Object.assign(options, {
             extra: {
-               ssl: true
+               ssl: {
+                  rejectUnauthorized: false
+               }
             }
          })
       }
