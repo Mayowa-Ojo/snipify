@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "test": "npx cypress open"
   },
   "dependencies": {
     "@tailwindcss/line-clamp": "^0.2.0",
@@ -15,6 +16,7 @@
     "autoprefixer": "^9.8.6",
     "axios": "^0.21.0",
     "core-js": "^3.6.5",
+    "cypress": "^6.5.0",
     "date-fns": "^2.16.1",
     "mobile-device-detect": "^0.4.3",
     "nanoid": "^3.1.20",
