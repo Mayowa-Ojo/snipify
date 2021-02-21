@@ -68,4 +68,12 @@ router.use("/collections", collectionRouter);
 router.use("/comments", commentRouter);
 router.use("/search", searchRouter);
 
+router.get("/health", (_, res) => {
+   res.json({
+      ok: true,
+      message: "up and running",
+      data: null
+   })
+})
+
 export default router;
