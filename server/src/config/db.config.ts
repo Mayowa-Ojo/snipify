@@ -11,6 +11,14 @@ const connectDB = async (): Promise<Connection | void> => {
          Object.assign(options, { database: config.DB_TEST});
       }
 
+      if(config.NODE_ENV === "production") {
+         Object.assign(options, {
+            extra: {
+               ssl: true
+            }
+         })
+      }
+
       const connection = await createConnection(options);
 
       console.log("[INFO] --typeorm: connected to database");
