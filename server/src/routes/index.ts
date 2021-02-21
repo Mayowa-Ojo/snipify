@@ -8,8 +8,6 @@ import * as commentController from "~controllers/comment.controller";
 import * as searchController from "~controllers/search.controller";
 import * as collectionController from "~controllers/collection.controller";
 import { authGuard } from "~middleware/index";
-import * as es from "~services/es.service";
-import { IFileIndex } from "~declarations/index";
 
 const router = Router();
 const authRouter = Router();
@@ -52,27 +50,6 @@ commentRouter.delete("/:id", authGuard, commentController.deleteOne);
 
 searchRouter.post("/index", authGuard, searchController.createIndex);
 searchRouter.get("/", authGuard, searchController.searchByQuery);
-searchRouter.post("/index/document", async (req, res, next) => {
-   try {
-      const { doc } = req.body;
-
-      const result = await es.addDocumentToIndex(<IFileIndex>{
-         fileId: doc.fileId,
-         filename: doc.filename,
-         language: doc.language,
-      }, "files");
-
-      res.status(200).json({
-         ok: true,
-         message: "resource updated",
-         data: {
-            result
-         }
-      });
-   } catch (err) {
-      next(err);
-   }
-});
 searchRouter.delete("/:id", authGuard, searchController.deleteDocument);
 
 
