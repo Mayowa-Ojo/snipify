@@ -2,7 +2,7 @@ describe("Home Page - snips", () => {
    beforeEach(() => {
       localStorage.setItem("user", JSON.stringify({
          id: "2cf2785f-3814-42f1-826d-709c6a9da4ff",
-         token: "6843060f2da380c25dd8ed2f1d947dd0aef9ca35"
+         token: Cypress.env("ACCESS_TOKEN")
       }))
 
       cy.visit("/snips")
