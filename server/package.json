@@ -7,7 +7,7 @@
       "start": "NODE_ENV=production node dist/server.js",
       "start:background": "NODE_ENV=production pm2 start dist/server.js --name <edit>",
       "start:dev": "nodemon",
-      "start:prod": "npm run build && npm run start:background",
+      "start:prod": "npm run build && cross-env NODE_ENV=production node dist/server.js",
       "build": "rimraf ./dist && tsc --project tsconfig.json && tscpaths -p tsconfig.json -s ./src -o ./dist",
       "test": "cross-env NODE_ENV=test jest --detectOpenHandles"
    },
