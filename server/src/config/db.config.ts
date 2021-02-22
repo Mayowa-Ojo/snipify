@@ -1,5 +1,4 @@
 import { createConnection, getConnectionOptions, Connection } from "typeorm";
-import path from "path"
 
 import { config } from "~config/env.config";
 
@@ -14,7 +13,6 @@ const connectDB = async (): Promise<Connection | void> => {
 
       if(config.NODE_ENV === "production") {
          Object.assign(options, {
-            entities: [path.join(__dirname + "../database/entity/**/*.js")],
             extra: {
                ssl: {
                   rejectUnauthorized: false
