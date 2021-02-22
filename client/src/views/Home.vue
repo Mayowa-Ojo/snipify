@@ -3,9 +3,9 @@
       <aside class="sidebar w-20 px-2 py-8 bg-gray-100 border-r border-gray-300 flex flex-col justify-between items-center">
          <div>
             <div class="w-12 h-12 rounded-xl bg-gray-400 border-2 border-white relative flex justify-end items-end">
-               <span class="text-18 font-semibold text-white mr-2 mb-1">Sr</span>
+               <span class="text-18 font-semibold text-white mr-2 mb-1">{{userInitials}}</span>
                <span
-                  class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-400 font-medium text-white absolute"
+                  class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-400 font-medium text-white absolute invisible"
                   style="bottom: -6px; right: -4px; font-size: 11px;"
                >25</span>
             </div>
@@ -319,7 +319,11 @@
                         <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-300 text-12 text-gray-500 ml-1">{{currentSnip.files.length}}</span>
                      </p>
                   </div>
-                  <div class="ml-4 py-2 flex-none">
+                  <!--
+                     - Couldn't find a way to implement dynamic theming for the editor 
+                     - Might come back to this later
+                  -->
+                  <!-- <div class="ml-4 py-2 flex-none">
                      <button class="px-2 py-1 rounded-md bg-gray-200 border border-gray-300 text-12 font-normal text-gray-600 capitalize">
                         <icon class="mr-2" data="@icon/palette.svg" color="#6B7280" width="1rem" height="1rem"/>
                         tomorrow
@@ -369,7 +373,7 @@
                            </ul>
                         </Popover>
                      </button>
-                  </div>
+                  </div> -->
                </header>
                <div class="w-full flex justify-between items-center px-4">
                   <div class="flex items-start">
@@ -538,6 +542,16 @@ export default {
       ]),
       downloadLink: function() {
          return `${process.env.VUE_APP_API_BASE_URL}v${process.env.VUE_APP_API_VERSION}/snips/${this.currentSnip.id}/zip`
+      },
+      userInitials: function() {
+         const profile = this.$store.state.profile
+
+         if(!profile) return ""
+
+         const names = profile.name.split(" ")
+         const firstInitial = names[0][0].toUpperCase()
+         const lastInitial = names[1][0].toLowerCase()
+         return `${firstInitial}${lastInitial}`
       }
    },
    methods: {
@@ -641,7 +655,6 @@ export default {
       if(!requestToken) {
          await this.$store.dispatch(ACTIONS.RE_AUTHENTICATE_USER)
       } else {
-         console.log("request token")
          await this.$store.dispatch(ACTIONS.AUTHENTICATE_USER, {
             requestToken
          })
