@@ -3,10 +3,11 @@ import { Client } from "@elastic/elasticsearch";
 import { config } from "~config/env.config";
 
 let client: Client;
+const isProduction = process.env.NODE_ENV === "production";
 
 try {
    client = new Client({
-      node: config.ELASTIC_SEARCH_HOST,
+      node: isProduction ? config.SEARCHBOX_URL : config.ELASTIC_SEARCH_HOST,
       maxRetries: 5,
       requestTimeout: 60000,
       sniffOnStart: true
