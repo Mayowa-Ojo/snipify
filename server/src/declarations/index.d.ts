@@ -27,6 +27,7 @@ declare interface IEnvConfig {
    GITHUB_OAUTH_URL: string
    GITHUB_USER_URL: string
    ELASTIC_SEARCH_HOST: string
+   SEARCHBOX_URL: string
 }
 
 // Database
