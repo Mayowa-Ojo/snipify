@@ -11,17 +11,15 @@ const app = express();
 
 app.use(cors({
    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-   origin: "*",
-   allowedHeaders: ["Content-Type", "Access-Control-Allow-Origin", "Authorization", "X-Requested-With"],
+   origin: ["http://localhost:8080", "http://10.0.0.147:8080", "https://snipify.vercel.app"],
    credentials: true
 }));
 
-app.options("*", cors({
-   methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-   origin: "*",
-   allowedHeaders: ["Content-Type", "Access-Control-Allow-Origin", "Authorization", "X-Requested-With"],
-   credentials: true
-})); // enable cors pre-flight
+// app.options("*", cors({
+//    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+//    origin: ["https://snipify.vercel.app"],
+//    credentials: true
+// })); // enable cors pre-flight
 
 app.use(helmet());
 
