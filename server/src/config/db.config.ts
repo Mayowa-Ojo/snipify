@@ -13,6 +13,7 @@ const connectDB = async (): Promise<Connection | void> => {
 
       if(config.NODE_ENV === "production") {
          Object.assign(options, {
+            entities: [],
             extra: {
                ssl: {
                   rejectUnauthorized: false
@@ -24,6 +25,7 @@ const connectDB = async (): Promise<Connection | void> => {
       const connection = await createConnection(options);
 
       console.log("[INFO] --typeorm: connected to database");
+      console.log("[DEBUG] __dirname: ", __dirname);
       return connection;
    } catch (err) {
       console.error(`[ERROR] --typeorm: ${err.message}`);
