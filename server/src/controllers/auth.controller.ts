@@ -8,7 +8,6 @@ import { config } from "~config/env.config";
 import type { AsyncHandler } from "~declarations/index";
 
 export const authenticate: AsyncHandler = async (req, res, next) => {
-   console.log("[DEBUG] --cors <method>: ", req.method)
    const error = new ResponseError;
    const { requestToken } = req.body;
 
