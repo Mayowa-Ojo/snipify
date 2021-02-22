@@ -11,7 +11,7 @@ const app = express();
 
 app.use(cors({
    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-   origin: ["http://localhost:8080", "http://10.0.0.147:8080"],
+   origin: ["http://localhost:8080", "http://10.0.0.147:8080", "https://snipify.vercel.app"],
    credentials: true
 }));
 
