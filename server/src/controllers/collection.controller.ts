@@ -2,10 +2,9 @@ import codes from "http-status-codes";
 
 import * as collectionRepository from "~repository/collection.repository";
 import * as snipRepository from "~repository/snip.repository";
-import * as es from "~services/es.service";
 import User from "~entity/user.entity";
 import { ResponseError } from "~utils/index";
-import type { AsyncHandler, ICollectionIndex } from "~declarations/index";
+import type { AsyncHandler } from "~declarations/index";
 
 export const create: AsyncHandler = async (req, res, next) => {
    const error = new ResponseError;
@@ -27,11 +26,6 @@ export const create: AsyncHandler = async (req, res, next) => {
             owner: user.id
          }
       });
-
-      await es.addDocumentToIndex(<ICollectionIndex>{
-         collectionId: result.id,
-         name: result.name
-      }, "collections");
 
       res.status(codes.CREATED).json({
          ok: true,

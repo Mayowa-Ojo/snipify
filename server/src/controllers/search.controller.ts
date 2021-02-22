@@ -47,7 +47,7 @@ export const searchByQuery: AsyncHandler = async (req, res, next) => {
    try {
       const { body: { hits: { hits: snipHits }}} = await es.searchIndices(["snips"], q, ["title", "description"]);
       const { body: { hits: { hits: fileHits }}} = await es.searchIndices(["files"], q, ["filename", "language"]);
-      const { body: { hits: { hits: collectionHits }}} = await es.searchIndices(["collections"], q, ["name"]);
+      // const { body: { hits: { hits: collectionHits }}} = await es.searchIndices(["collections"], q, ["name"]);
 
       res.status(codes.OK).json({
          ok: true,
@@ -55,7 +55,7 @@ export const searchByQuery: AsyncHandler = async (req, res, next) => {
          data: {
             snip_hits: snipHits,
             file_hits: fileHits,
-            collection_hits: collectionHits
+            // collection_hits: collectionHits
          }
       })
    } catch (err) {
