@@ -22,6 +22,7 @@ const connectDB = async (): Promise<Connection | void> => {
       }
 
       const connection = await createConnection(options);
+      console.error(`[ERROR] --typeorm: connected to database`);
       return connection;
    } catch (err) {
       console.error(`[ERROR] --typeorm: ${err.message}`);
