@@ -9,13 +9,17 @@ import { notFoundError, errorHandler } from "~middleware/index";
 
 const app = express();
 
-app.options("*", cors()); // enable cors pre-flight
 app.use(cors({
    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
    origin: ["http://localhost:8080", "http://10.0.0.147:8080", "https://snipify.vercel.app"],
-   allowedHeaders: [],
    credentials: true
 }));
+
+app.options("*", cors({
+   methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+   origin: ["https://snipify.vercel.app"],
+   credentials: true
+})); // enable cors pre-flight
 
 app.use(helmet());
 
