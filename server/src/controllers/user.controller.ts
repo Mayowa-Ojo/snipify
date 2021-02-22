@@ -125,11 +125,19 @@ export const getStarredSnipsForUser: AsyncHandler = async (req, res, next) => {
    }
 
    try {
-      const snips = await repository.createQueryBuilder("snip")
-         .leftJoinAndSelect("snip.files", "file")
-         .leftJoinAndSelect("snip.author", "author")
-         .where("snip.id IN (:...starred)", { starred: user.starred })
-         .getMany();
+      let snips: Snip[];
+      /**
+       * prevents the sql syntax error that occurs when selecting from empty array
+       */
+      if(user.starred.length > 0) {
+         snips = await repository.createQueryBuilder("snip")
+            .leftJoinAndSelect("snip.files", "file")
+            .leftJoinAndSelect("snip.author", "author")
+            .where("snip.id IN (:...starred)", { starred: user.starred })
+            .getMany();
+      } else {
+         snips = [];
+      }
 
       res.status(codes.OK).json({
          ok: true,
