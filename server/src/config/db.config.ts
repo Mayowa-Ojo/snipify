@@ -14,7 +14,7 @@ const connectDB = async (): Promise<Connection | void> => {
 
       if(config.NODE_ENV === "production") {
          Object.assign(options, {
-            entities: [__dirname + "../database/entity/**/*.js"],
+            entities: [path.join(__dirname + "../database/entity/**/*.js")],
             extra: {
                ssl: {
                   rejectUnauthorized: false
