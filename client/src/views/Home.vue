@@ -2,7 +2,7 @@
    <div class="absolute overflow-y-hidden inset-0 h-screen bg-gray-100 flex">
       <aside class="sidebar w-20 px-2 py-8 bg-gray-100 border-r border-gray-300 flex flex-col justify-between items-center">
          <div>
-            <div class="w-12 h-12 rounded-xl bg-gray-400 border-2 border-white relative flex justify-end items-end">
+            <div class="w-12 h-12 rounded-xl bg-gray-400 border-2 border-white relative flex justify-end items-end invisible">
                <span class="text-18 font-semibold text-white mr-2 mb-1">{{userInitials}}</span>
                <span
                   class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-400 font-medium text-white absolute invisible"
