@@ -308,14 +308,14 @@ export default {
             this.updateSearchHistory(this.search.query)
          }
 
-         if(response.data["collection_hits"].length > 0) {
-            this.search.hits = {
-               ...this.search.hits,
-               collections: this.sortSearchHits(response.data["collection_hits"], "_score")
-            }
+         // if(response.data["collection_hits"].length > 0) {
+         //    this.search.hits = {
+         //       ...this.search.hits,
+         //       collections: this.sortSearchHits(response.data["collection_hits"], "_score")
+         //    }
 
-            this.updateSearchHistory(this.search.query)
-         }
+         //    this.updateSearchHistory(this.search.query)
+         // }
 
          this.status = "idle"
       },
