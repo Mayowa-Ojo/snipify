@@ -16,7 +16,7 @@
    - Elasticsearch
    - Github oauth
 
-![screenshot](https://res.cloudinary.com/devmayor/image/upload/v1614118043/media/Screenshot_from_2021-02-23_14-55-11.png)
+![screencast](https://res.cloudinary.com/devmayor/image/upload/v1614119427/media/recording.gif)
 
 ### Development
 Node.js [v.14]
