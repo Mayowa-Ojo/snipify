@@ -20,8 +20,10 @@
 
 ### Development
 Node.js [v.14]
+
 postgres [v.12]
-Elasticsearch [v.7]
+
+Elasticsearch [v.7] | [installation](https://www.elastic.co/guide/en/elasticsearch/reference/current/install-elasticsearch.html)
 
 ```shell
 $ mkdir <folder>
